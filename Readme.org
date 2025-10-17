@@ -5,6 +5,9 @@
 https://clojars.org/com.github.semantic-namespace/contract
 
 
+** rationale
+https://tangrammer.codeberg.page/on-the-clojure-move/output/posts/semantic-namespace-contract.html
+
 ** Usage
 
 [[./dev/src/semantic_namespace/example.clj][example]] 
