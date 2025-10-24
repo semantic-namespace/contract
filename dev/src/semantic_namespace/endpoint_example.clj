@@ -9,31 +9,33 @@
 (s/valid? :endpoint/param :endpoint/handler)
 (s/def :authz/role #{:user :admin :client})
 
-(contract.type/def :semantic-namespace/endpoint [:endpoint/handler :endpoint/params :authz/role])
+(contract.type/def #{:semantic-namespace/endpoint} [:endpoint/handler :endpoint/params :authz/role] true)
 
 (s/def :user/id uuid?)
 (s/def :admin/id uuid?)
 
-(contract/def :semantic-namespace/endpoint :my-app/user
+(contract/def #{:semantic-namespace/endpoint :my-app/user}
   {:endpoint/handler (fn [req] (format "welcome user! %s" (:user/id req)) )
    :endpoint/params [:user/id]   
    :authz/role :user})
 
-(contract/def :semantic-namespace/endpoint :my-app.admin/user
+(contract/def #{:semantic-namespace/endpoint :my-app.admin/user}
   {:endpoint/handler (fn [req] (format "admin %s for user %s" (:admin/id req) (:user/id req)) )
    :endpoint/params [:user/id :admin/id]   
    :authz/role :admin})
 
 ;; routing part 
-(contract.type/instances :semantic-namespace/endpoint)
-;; #{:my-app.admin/user :my-app/user}
+(contract.type/instances #{:semantic-namespace/endpoint})
+;; => [#{:semantic-namespace/endpoint :my-app/user}
+;;     #{:semantic-namespace/endpoint :my-app.admin/user}]
+
 
 (def admins #{#uuid "a375f226-8ed8-418a-848d-3913b7b60550"})
 
 ;; eg receiving request for admin user
 (let [request {:admin/id #uuid "a375f226-8ed8-418a-848d-3913b7b60550"
                :user/id #uuid "eb97a1f8-ca71-4eba-953d-f340d4fe36c5"}
-      endpoint-contract (contract/fetch :semantic-namespace/endpoint :my-app.admin/user)]
+      endpoint-contract (contract/fetch #{:semantic-namespace/endpoint :my-app.admin/user})]
   ;; assert s/valid? params
   (mapv #(assert (s/valid? % (% request))) (:endpoint/params endpoint-contract))
   (when (:endpoint/admin endpoint-contract) 
@@ -41,18 +43,18 @@
   ((:endpoint/handler endpoint-contract) request))
 
 ;; best part: semantic introspection 
-(->> (contract.type/instances :semantic-namespace/endpoint)
-     (mapv (partial contract/fetch :semantic-namespace/endpoint))
+(->> (contract.type/instances #{:semantic-namespace/endpoint})
+     (mapv contract/fetch )
      (group-by :authz/role)
      )
 
-(->> (contract.type/instances :semantic-namespace/endpoint)
-     (mapv (partial contract/fetch :semantic-namespace/endpoint))
+(->> (contract.type/instances #{:semantic-namespace/endpoint})
+     (mapv contract/fetch )
      (group-by :endpoint/params)
      )
 
-(->> (contract.type/instances :semantic-namespace/endpoint)
-     (mapv (partial contract/fetch :semantic-namespace/endpoint))     
+(->> (contract.type/instances #{:semantic-namespace/endpoint})
+     (mapv contract/fetch )     
      (filter (comp #(contains? % :admin/id) set :endpoint/params))
      )
 

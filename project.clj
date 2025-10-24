@@ -3,7 +3,8 @@
   :url "https://github.com/semantic-spec/contract"
   :license {:name "MIT"
             :url "https://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.11.1"]]
+  :dependencies [[org.clojure/clojure "1.11.1"]
+                 [com.github.semantic-namespace/spec.keys "0.1.0-SNAPSHOT"]]
   :deploy-repositories [["clojars" {:url "https://repo.clojars.org"
                                     :creds :gpg}]]
   :profiles {:dev {:source-paths   ["dev/src"]

@@ -1,17 +1,19 @@
 (ns semantic-namespace.contract
   (:require [clojure.spec.alpha :as s]
-            [semantic-namespace.contract.type :as contract.type]))
-
-(defonce registry (ref {}))
+            [clojure.set :as set]
+            [semantic-namespace.compound.identity :as compound.identity]))
 
 (defn def
   "register a contract type relation for a specific instance and contract-props"
-  [type instance props]
-  (let [data {:semantic-namespace.contract/type type
-              :semantic-namespace.contract/instance instance
-              :semantic-namespace.contract/props props}
-        type-keys (contract.type/props type)]
-    (assert (type @contract.type/registry) "type should be defined as contract.type/def before using this contract/def")
+  [v0 props]
+  (let [v (conj v0 :semantic-namespace.contract/type)
+        type-keys (let [res (->> (keys @compound.identity/registry)
+                                 (filter :semantic-namespace.contract/type)
+                                 (filter #(not= v0 (set/difference v %))))]
+                    (assert (= 1 (count res)) {v0 res})
+                    (let [id3 (first res)]
+                      (:semantic-namespace.spec.keys/specs (get @compound.identity/registry id3))))]
+    (assert type-keys "type should be defined as contract.type/def before using this contract/def")
     (mapv (fn [type-key]
             (when-not (s/valid? type-key (type-key props))
               (throw (ex-info (format "Invalid data for : %s" type-key)
@@ -19,16 +21,9 @@
                                :spec type-key
                                :spec-value (type-key props)}))))
           type-keys)
-    (dosync
-     (alter registry update instance merge (merge (select-keys data [:semantic-namespace.contract/type
-                                                                     :semantic-namespace.contract/instance]) props))
-     (alter contract.type/registry update-in [type ::contract.type/instances] conj instance)
-     data)
-    [type instance]))
+    (swap! compound.identity/registry assoc (conj v0 :semantic-namespace.contract/instance) props)
+    [(conj v0 :semantic-namespace.contract/instance) type-keys]))
 
 (defn fetch
-  [type instance]
-  (let [contract (instance @registry )]
-    (merge
-     (select-keys contract [:semantic-namespace.contract/type :semantic-namespace.contract/instance])
-     (select-keys contract (contract.type/props type)))))
+  [id]
+  (get @compound.identity/registry (conj id :semantic-namespace.contract/instance)))
