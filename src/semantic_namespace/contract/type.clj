@@ -34,6 +34,6 @@
   [id0 props])
 
 (defn remove [id]
-  (compound.identity/remove (conj id :semantic-namespace.contract/type)))
+  (compound.identity/remove* (conj id :semantic-namespace.contract/type)))
 
 
