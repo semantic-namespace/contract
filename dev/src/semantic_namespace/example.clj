@@ -6,7 +6,7 @@
 (s/def :docs/content string?)
 ;; => :docs/content
 
-(contract.type/def #{:semantic-namespace/docs} [:docs/content] true)
+(contract.type/def #{:semantic-namespace/docs} [:docs/content])
 ;; => [#{:semantic-namespace/docs} [:docs/content]]
 
 (contract/def
